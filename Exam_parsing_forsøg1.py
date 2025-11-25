@@ -19,22 +19,22 @@ for file in files:
  #   matchday = file[:-6] 
     names = soup.findAll('header',attrs={'class':'c-warvictim-intro'})
     for name in names:
-        #makes a list
-        person = []
         person_info = name.find('p',attrs={'class':'c-warvictim-intro__sub'}).text
         person_info = person_info.strip()
         person_info = " ".join(person_info.split())
 #få den  til at stoppe ved - og splitte fødselssted ved første , komma
         print(person_info)
-        
         #looks at html files and takes their person ID
         pID = file.split("-")[0]
-        person.append(pID)
         #looks at our html files and takes their names
-        pName = file.replace(pID+'-',"")
+        pName = file.replace(ID+'-',"")
         pName = pName.replace(".html","")
-        person.append(pName)
-        
+        splitted = person_info.split(",")
+        Birthplace = splitted[0]
+        Deathdate = splitted[2]
+        Birthdate = splitted[1].split("–",1)[0]
+        Deathplace = splitted[1].split("–",1)[1]
+        data.append([pID,pName,Birthplace,Birthdate,Deathplace,Deathdate])
 
    
 
@@ -56,3 +56,4 @@ for file in files:
 
 #df = pandas.DataFrame(data,columns = ['matchday','date','home team','away team','home goals','away goals'])
 #df.to_csv('results.csv', index=False, encoding='utf-8')
+
