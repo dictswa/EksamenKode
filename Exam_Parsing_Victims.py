@@ -37,15 +37,15 @@ relationships = []
 for file in files:
     text = open('sinti-en-roma-namenlijst/'+file,'r',encoding='utf-8').read()
     soup = BeautifulSoup(text,features="lxml")
-    names = soup.findAll('div',attrs={'class':'c-warvictim-family-tree'})
-    for name in names:
+    family_tree = soup.findAll('div',attrs={'class':'c-warvictim-family-tree'})
+    for family in family_tree:
         relations = name.findAll('div',attrs={'class':"c-warvictim-family-tree__block"})
         for relation in relations:
-            rel_gen = relation.find('h3',attrs={'class':'c-warvictim__subtitle'})
-            if rel_gen == None:
+            general = relation.find('h3',attrs={'class':'c-warvictim__subtitle'})
+            if general == None:
                 general_type = 'spouse'
             else:
-                general_type = rel_gen.text
+                general_type = general.text
             print(general_type)
             people = relation.findAll('h4',attrs={'class':'c-card-family__title'})
             specific = relation.findAll('div',attrs={'class':'c-card-family__relation'})
