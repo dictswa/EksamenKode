@@ -28,7 +28,23 @@ for file in files:
        # age = name.find #færdiggør den her :)
         data.append([pID,pName,Birthplace,Birthdate,Deathplace,Deathdate])
 
+relationships = []
+
+for file in files:
+    text = open('sinti-en-roma-namenlijst/'+file,'r',encoding='utf-8').read()
+    soup = BeautifulSoup(text,features="lxml")
+    names = soup.findAll('div',attrs={'class':'c-warvictim-family-tree'})
+    for name in names:
+        general_relations = name.findAll('h3',attrs={'class':'c-warvictim__subtitle'})
+        for relation in general_relations:
+            general_relation = relation.text
+            print(general_relation)
+            person_links = name.findAll('h4',attrs={'class':'c-card-family__title'})
+            for person_link in person_links:
+                person_link = person_link.text
+                print(person_link)
 
 
 df = pandas.DataFrame(data,columns = ["ID","Name","Birthplace","Birthdate","Deathplace","Deathdate"])
+
 df.to_csv('Victims.csv', index=False, encoding='utf-8')
