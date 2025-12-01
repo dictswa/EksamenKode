@@ -28,6 +28,10 @@ for file in files:
        # age = name.find #færdiggør den her :)
         data.append([pID,pName,Birthplace,Birthdate,Deathplace,Deathdate])
 
+df = pandas.DataFrame(data,columns = ["ID","Name","Birthplace","Birthdate","Deathplace","Deathdate"])
+df.to_csv('Victims.csv', index=False, encoding='utf-8')
+
+
 relationships = []
 
 for file in files:
@@ -35,25 +39,22 @@ for file in files:
     soup = BeautifulSoup(text,features="lxml")
     names = soup.findAll('div',attrs={'class':'c-warvictim-family-tree'})
     for name in names:
-        rel_children = name.find('div',attrs={'class':"c-warvictim-family-tree__block c-warvictim-family-tree__block--children"})
-        if rel_children != None:
-            children = rel_children.findAll('h4',attrs={'class':'c-card-family__title'})
-            rel_spec = rel_children.findAll('div',attrs={'class':'c-card-family__relation'})
-            for i in range(len(children)):
-                pID = file.split("-")[0]
-                link = children[i].find('a')
-                rID = link['href'].split("/")[-2]
-                rel_specs = rel_spec[i].text.strip()
-                if rel_specs != 'Daughter':
-                    if rel_specs != 'Son':
-                        rel_specs = 'Unknown'
-                relationships.append([pID,rID,'children',rel_specs])
-        else:
-            print('No known children')
-
-
-df = pandas.DataFrame(data,columns = ["ID","Name","Birthplace","Birthdate","Deathplace","Deathdate"])
-
-df.to_csv('Victims.csv', index=False, encoding='utf-8')
-
-
+        relations = name.findAll('div',attrs={'class':"c-warvictim-family-tree__block"})
+        for relation in relations:
+            rel_gens = relation.findAll('h3',attrs={'class':'c-warvictim__subtitle'})
+            for rel_gen in rel_gens:
+                general_type = rel_gen.text
+                if general_type != None:
+                    people = relation.findAll('h4',attrs={'class':'c-card-family__title'})
+                    specific = relation.findAll('div',attrs={'class':'c-card-family__relation'})
+                    for i in range(len(people)):
+                        pID = file.split("-")[0]
+                        link = people[i].find('a')
+                        rID = link['href'].split("/")[-2]
+                        specific_type = specific[i].text.strip()
+                        if specific_type == '' or specific_type == 'Survivor':
+                            specific_type = 'Unknown'
+                        relationships.append([pID,rID,general_type,specific_type])
+                    
+df = pandas.DataFrame(relationships,columns = ["ID1","ID2","General relationship type","Detailed relationship type"])
+df.to_csv('Relationships.csv', index=False, encoding='utf-8')
