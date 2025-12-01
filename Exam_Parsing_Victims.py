@@ -31,20 +31,21 @@ for file in files:
 relationships = []
 
 for file in files:
-    text = open('sinti-en-roma-namenlijst/'+file,'r',encoding='utf-8').read()
+    text = open('sinti-en-roma-namenlijst/'+'222016-Emelie Bannink-Kreutz.html','r',encoding='utf-8').read()
     soup = BeautifulSoup(text,features="lxml")
     names = soup.findAll('div',attrs={'class':'c-warvictim-family-tree'})
     for name in names:
-        general_relations = name.findAll('h3',attrs={'class':'c-warvictim__subtitle'})
-        for relation in general_relations:
-            general_relation = relation.text
-            print(general_relation)
-            person_links = name.findAll('h4',attrs={'class':'c-card-family__title'})
-            for person_link in person_links:
-                person_link = person_link.text
-                print(person_link)
+        rel_children = name.find('div',attrs={'class':"c-warvictim-family-tree__block c-warvictim-family-tree__block--children"})
+        children = rel_children.findAll('h4',attrs={'class':'c-card-family__title'})
+        rel_spec = rel_children.findAll('div',attrs={'class':'c-card-family__relation'})
+        for child in children:
+            link = child.find('a')
+            rID = link['href'].split("/")[-2]
+        for rel_specs in rel_spec:
+            rel_specs = rel_specs.text.strip()
 
 
 df = pandas.DataFrame(data,columns = ["ID","Name","Birthplace","Birthdate","Deathplace","Deathdate"])
 
 df.to_csv('Victims.csv', index=False, encoding='utf-8')
+
