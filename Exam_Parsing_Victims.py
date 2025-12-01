@@ -31,21 +31,29 @@ for file in files:
 relationships = []
 
 for file in files:
-    text = open('sinti-en-roma-namenlijst/'+'222016-Emelie Bannink-Kreutz.html','r',encoding='utf-8').read()
+    text = open('sinti-en-roma-namenlijst/'+file,'r',encoding='utf-8').read()
     soup = BeautifulSoup(text,features="lxml")
     names = soup.findAll('div',attrs={'class':'c-warvictim-family-tree'})
     for name in names:
         rel_children = name.find('div',attrs={'class':"c-warvictim-family-tree__block c-warvictim-family-tree__block--children"})
-        children = rel_children.findAll('h4',attrs={'class':'c-card-family__title'})
-        rel_spec = rel_children.findAll('div',attrs={'class':'c-card-family__relation'})
-        for child in children:
-            link = child.find('a')
-            rID = link['href'].split("/")[-2]
-        for rel_specs in rel_spec:
-            rel_specs = rel_specs.text.strip()
+        if rel_children != None:
+            children = rel_children.findAll('h4',attrs={'class':'c-card-family__title'})
+            rel_spec = rel_children.findAll('div',attrs={'class':'c-card-family__relation'})
+            for i in range(len(children)):
+                pID = file.split("-")[0]
+                link = children[i].find('a')
+                rID = link['href'].split("/")[-2]
+                rel_specs = rel_spec[i].text.strip()
+                if rel_specs != 'Daughter':
+                    if rel_specs != 'Son':
+                        rel_specs = 'Unknown'
+                relationships.append([pID,rID,'children',rel_specs])
+        else:
+            print('No known children')
 
 
 df = pandas.DataFrame(data,columns = ["ID","Name","Birthplace","Birthdate","Deathplace","Deathdate"])
 
 df.to_csv('Victims.csv', index=False, encoding='utf-8')
+
 
