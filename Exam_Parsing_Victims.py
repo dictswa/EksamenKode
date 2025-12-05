@@ -39,9 +39,14 @@ for file in files:
     #at the first, because some places include a dash
     Birthdate = splitted[1].split(" – ",1)[0]
     Deathplace = splitted[1].split(" – ",1)[1]
-    # age = name.find #færdiggør den her :)
+    #Finding the age
+    age = name.findAll('p',attrs={'class':'c-warvictim-intro__sub'})
+    if len(age)==2:
+        age = age[1].text.split(' ',4)[-1]
+    else:
+        age = "Unknown"
     #Appending all our variables to the empty data list 
-    data.append([pID,pName,Birthplace,Birthdate,Deathplace,Deathdate])
+    data.append([pID,pName,Birthplace,Birthdate,Deathplace,Deathdate,age])
 
 
     #Most of the relation except for "other" are in this block
@@ -99,9 +104,11 @@ for file in files:
 
 
 df = pandas.DataFrame(data,columns = ["ID","Name","Birthplace","Birthdate",
-                                      "Deathplace","Deathdate"])
+                                      "Deathplace","Deathdate","age"])
 df.to_csv('Victims.csv', index=False, encoding='utf-8')
+
 
 df = pandas.DataFrame(relationships,columns = ["ID1","ID2","General relationship type",
                                                "Detailed relationship type"])
 df.to_csv('Relationships.csv', index=False, encoding='utf-8')
+
