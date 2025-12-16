@@ -3,6 +3,7 @@ import dash                 #dash.Dash
 from dash import html, dcc  #html.Div, html.H1, html.H2
 import plotly.express as px #px.scatter_geo
 import plotly.graph_objects as go
+from dash import Input, Output
 import networkx as nx
 
 data = pd.read_csv('Victims_geocoded.csv', encoding='UTF-8')
@@ -30,7 +31,7 @@ fig_birth_map = px.scatter_geo(
                      lon='Birthlongitude',
                      hover_name='Birthplace',
                      size='victims',
-                     projection='natural earth')
+                     projection='natural earth', scope='europe')
 
 ############## map deathplace ##############
 death_circles = (
@@ -45,7 +46,7 @@ fig_death_map = px.scatter_geo(
                      lon='Deathlongitude',
                      hover_name='Deathplace',
                      size='victims',
-                     projection='natural earth')
+                     projection='natural earth', scope='europe')
 
 ############## network
 
@@ -135,28 +136,40 @@ fig_net = go.Figure(
 ############## dash app ##############
 app = dash.Dash(__name__) 
 app.layout = html.Div([
+        # table
         html.H1('Table over victims'),
-        dcc.Graph(
-            id = 'victims_table',
-            figure = table_fig
-        ),
-         html.H2("Birthplaces of victims"),
-         dcc.Graph(
-             id="birthplace_map",
-             figure=fig_birth_map
-        ),
-        html.H2('Deathplaces of victims'),
-        dcc.Graph(
-            id='deathplace_map',
-            figure=fig_death_map),
+        dcc.Graph(id = 'victims_table',figure = table_fig),
+        # dropdown
+            html.H2("Map"),
+            dcc.Dropdown(
+                id="map_selector",
+                options=[
+                    {"label": "Birthplaces", "value": "birth"},
+                    {"label": "Deathplaces", "value": "death"},
+                ],
+                value="birth",   # default
+                clearable=False
+            ),
+            dcc.Graph(id="map_graph"),    
+       
+
         html.H2("Network graph"), #network graph here
         dcc.Graph(
             id='network_graph',
             figure=fig_net),
 ])
-    
+
+@app.callback(
+    Output("map_graph", "figure"),
+    Input("map_selector", "value")
+)
+def update_map(which):
+    if which == "death":
+        return fig_death_map
+    return fig_birth_map
+  
 # run the app:
 if __name__ == '__main__':
-    app.run(debug=False, port=8060)
+    app.run(debug=False, port=8040)
 
 
