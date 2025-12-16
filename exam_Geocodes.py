@@ -3,6 +3,7 @@ import geopy
 import pandas as pd
 from geopy.exc import GeocoderTimedOut
 import time
+import numpy as np
 
 #reading our CSV dataset
 data = pd.read_csv('Victims.csv')
@@ -23,17 +24,17 @@ for i in range(len(Birthlocations)):
     location = None
     try:
         Birthlocations[i] = Birthlocations[i]
-        location = locator.geocode(Birthlocations[i],timeout=10000)
+        location = locator.geocode(Birthlocations[i],timeout=10)
         if location == None:
-            Birthlatitudes.append(0)
-            Birthlongitudes.append(0)
+            Birthlatitudes.append(np.nan)
+            Birthlongitudes.append(np.nan)
         else:
             Birthlatitudes.append(location.latitude)
             Birthlongitudes.append(location.longitude)
     except GeocoderTimedOut:
         print("Not able to geocode ...", Birthlocations[i])
-        Birthlatitudes.append(0)
-        Birthlongitudes.append(0)
+        Birthlatitudes.append(np.nan)
+        Birthlongitudes.append(np.nan)
     time.sleep(1)
     
 
@@ -49,17 +50,17 @@ for i in range(len(Deathlocations)):
     location = None
     try:
         Deathlocations[i] = Deathlocations[i]
-        location = locator.geocode(Deathlocations[i],timeout=10000)
+        location = locator.geocode(Deathlocations[i],timeout=10)
         if location == None:
-            Deathlatitudes.append(0)
-            Deathlongitudes.append(0)
+            Deathlatitudes.append(np.nan)
+            Deathlongitudes.append(np.nan)
         else:
             Deathlatitudes.append(location.latitude)
             Deathlongitudes.append(location.longitude)
     except GeocoderTimedOut:
         print("Not able to geocode ...", Deathlocations[i])
-        Deathlatitudes.append(0)
-        Deathlongitudes.append(0)
+        Deathlatitudes.append(np.nan)
+        Deathlongitudes.append(np.nan)
     time.sleep(1)
 
 #Making the lists into column in our dataset
