@@ -1,26 +1,25 @@
 import pandas as pd         #read_csv & dataframe operations
 import dash                 #dash.Dash
-from dash import html, dcc  #html.Div, html.H1, html.H2
+from dash import Dash, html, dcc, Input, Output, callback
 import plotly.express as px #px.scatter_geo
 import plotly.graph_objects as go
-from dash import Input, Output
-import networkx as nx
+import dash_cytoscape as cyto
 
-data = pd.read_csv('Victims_geocoded.csv', encoding='UTF-8')
-data1 = pd.read_csv('Relationships.csv', encoding='utf-8')
+VictGeo_df = pd.read_csv('Victims_geocoded.csv', encoding='UTF-8')
+Rela_df = pd.read_csv('Relationships.csv', encoding='utf-8', dtype=str)
 
 ############## table ##############
 table_fig = go.Figure(data=[go.Table(
     header=dict(values=['Name', 'Date of birth', 'Date of death', 'Age of death']), #header names
-    cells=dict(values=[data['Name'],
-                       data['Birthdate'],
-                       data['Deathdate'],
-                       data['age']])
+    cells=dict(values=[VictGeo_df['Name'],
+                       VictGeo_df['Birthdate'],
+                       VictGeo_df['Deathdate'],
+                       VictGeo_df['age']])
 )])
 
 ############## map birthplace ##############
 birth_circles = (
-    data.groupby(['Birthplace', 'Birthlatitude', 'Birthlongitude'], as_index=False)
+    VictGeo_df.groupby(['Birthplace', 'Birthlatitude', 'Birthlongitude'], as_index=False)
     .size() #groupby + size makes bubbles according to size
     .rename(columns={'size': 'victims'})
 )
@@ -35,7 +34,7 @@ fig_birth_map = px.scatter_geo(
 
 ############## map deathplace ##############
 death_circles = (
-    data.groupby(['Deathplace', 'Deathlatitude', 'Deathlongitude'], as_index=False)
+    VictGeo_df.groupby(['Deathplace', 'Deathlatitude', 'Deathlongitude'], as_index=False)
     .size()
     .rename(columns={'size': 'victims'})
 )
@@ -50,87 +49,18 @@ fig_death_map = px.scatter_geo(
 
 ############## network
 
-#Reads the data from our relationship csv
-data = pd.read_csv('Relationships.csv')
+elements = []
 
-#Adding all unique IDs in the csv to a list of IDs
-people_ids = []
-for item in data['ID1']:
-    if item not in people_ids:
-        people_ids.append(item)
-for item in data['ID2']:
-    if item not in people_ids:
-        people_ids.append(item)
+for item in pd.concat([Rela_df['ID1'], Rela_df['ID2']]).unique():
+    elements.append({'data': {'id': item}})
 
-#Adding all the relationships to a list of tuples
-relationship_ids = []
-for index, row in data.iterrows():
-    relationship_ids.append((row['ID1'], row['ID2']))
+for _, row in Rela_df.iterrows():
+    elements.append({'data': {'source': row['ID1'], 'target': row['ID2'], 
+                              'general':row['General relationship type'],
+                              'detailed':row['Detailed relationship type']}})
 
 
 
-#Creating the graph
-G = nx.Graph()
-
-#Adding our list of IDs so that each ID is their own node
-G.add_nodes_from(people_ids)
-
-#Adding all the "lines" between the nodes, these are called edges
-G.add_edges_from(relationship_ids)
-
-pos = nx.spring_layout(G)
-
-edge_x = []
-edge_y = []
-
-for edge in G.edges():
-    x0, y0 = pos[edge[0]]
-    x1, y1 = pos[edge[1]]
-    edge_x.extend([x0, x1, None])
-    edge_y.extend([y0, y1, None])
-
-edge_trace = go.Scatter(
-    x=edge_x,
-    y=edge_y,
-    line=dict(width=1, color="gray"),
-    hoverinfo="none",
-    mode="lines"
-)
-
-
-node_x = []
-node_y = []
-
-for node in G.nodes():
-    x, y = pos[node]
-    node_x.append(x)
-    node_y.append(y)
-
-node_trace = go.Scatter(
-    x=node_x,
-    y=node_y,
-    mode="markers",
-    text=list(G.nodes()),
-    textposition="top center",
-    hoverinfo="text",
-    marker=dict(
-        size=10,
-        color="skyblue",
-        line=dict(width=2, color="black")
-    )
-)
-
-fig_net = go.Figure(
-    data=[edge_trace, node_trace],
-    layout=go.Layout(
-        title="Relative graph",
-        showlegend=False,
-        hovermode="closest",
-        margin=dict(b=20, l=5, r=5, t=40),
-        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
-    )
-)
 
 
 ############## dash app ##############
@@ -139,7 +69,7 @@ app.layout = html.Div([
         # table
         html.H1('Table over victims'),
         dcc.Graph(id = 'victims_table',figure = table_fig),
-        # dropdown
+            # dropdown
             html.H2("Map"),
             dcc.Dropdown(
                 id="map_selector",
@@ -147,17 +77,25 @@ app.layout = html.Div([
                     {"label": "Birthplaces", "value": "birth"},
                     {"label": "Deathplaces", "value": "death"},
                 ],
-                value="birth",   # default
+                value="birth",  #set birth as default
                 clearable=False
             ),
-            dcc.Graph(id="map_graph"),    
-       
-
-        html.H2("Network graph"), #network graph here
-        dcc.Graph(
-            id='network_graph',
-            figure=fig_net),
+            # map graph
+            dcc.Graph(id="map_graph"), 
+            # network graph
+            html.H2("Network"),
+            cyto.Cytoscape(
+                id="cytoscape",
+                elements=elements,
+                layout={"name": "cose"},
+            ),
+            html.Div(id="cytoscape-tapNodeData-output"),
+            html.Div(id="cytoscape-tapEdgeData-output"),
 ])
+
+        
+
+
 
 @app.callback(
     Output("map_graph", "figure"),
@@ -167,6 +105,30 @@ def update_map(which):
     if which == "death":
         return fig_death_map
     return fig_birth_map
+
+
+@callback(
+    Output('cytoscape-tapNodeData-output', 'children'),
+    Input('cytoscape', 'tapNodeData')
+)
+
+def displayTapNodeData(data):
+    if data is None:
+        return ""
+    return f"You tapped the id: {data['id']}"
+
+@callback(
+     Output('cytoscape-tapEdgeData-output', 'children'),
+     Input('cytoscape', 'tapEdgeData')
+)
+
+def displayTapEdgeData(data):
+    if data is None:
+        return ""
+    if 'source' not in data or 'target' not in data:
+        return ""
+    return f"The relation is {data['general']} and {data['detailed']}"
+
   
 # run the app:
 if __name__ == '__main__':
