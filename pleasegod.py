@@ -1,6 +1,6 @@
 import pandas as pd         #read_csv & dataframe operations
 import dash                 #dash.Dash
-from dash import Dash, html, dcc, Input, Output, callback, ctx
+from dash import html, dcc, Input, Output, callback, ctx
 import plotly.express as px #px.scatter_geo
 import plotly.graph_objects as go
 import dash_cytoscape as cyto
@@ -64,8 +64,7 @@ for item in pd.concat([Rela_df['ID1'], Rela_df['ID2']]).unique():
     elements.append({'data': {
         'id': item,
         'birthplace': v_data.get('Birthplace', 'Unknown'),
-        'deathplace': v_data.get('Deathplace', 'Unknown')
-    }})
+        'deathplace': v_data.get('Deathplace', 'Unknown')}})
 
 for _, row in Rela_df.iterrows():
     elements.append({'data': {'source': row['ID1'], 'target': row['ID2'], 
@@ -123,10 +122,14 @@ def update_map(which, net_data, map_data):
 
     if which == "death":
         df = death_circles.copy() #copies the map data
-        lat_c, lon_c, hover_c = 'Deathlatitude', 'Deathlongitude', 'Deathplace'
+        lat_c = 'Deathlatitude'
+        lon_c = 'Deathlongitude'
+        hover_c = 'Deathplace'
     else:
         df = birth_circles.copy()
-        lat_c, lon_c, hover_c = 'Birthlatitude', 'Birthlongitude', 'Birthplace'
+        lat_c = 'Birthlatitude'
+        lon_c = 'Birthlongitude'
+        hover_c = 'Birthplace'
 
     df['color'] = 'blue' #setting default color to blue, by making a new column
     place_to_highlight = None #setting the highlight to none to start
@@ -191,7 +194,6 @@ def update_network_style(map_data, net_data, map_type):
         }) #update style to change color of the corresponding nodes
         
     return base_style
-
 
 @callback(
     Output('cytoscape-tapNodeData-output', 'children'),
