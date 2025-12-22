@@ -83,6 +83,8 @@ app.layout = html.Div([
             cyto.Cytoscape(
                 id="cytoscape",
                 elements=elements,
+                minZoom = 0.3,
+                maxZoom = 2,
                 layout={"name": "cose"},
                 stylesheet=[
                     {'selector': 'node', 'style': {'background-color': '#636EFA'}},
