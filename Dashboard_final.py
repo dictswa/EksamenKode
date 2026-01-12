@@ -97,7 +97,7 @@ app.layout = html.Div([
 '''
 Callbacks
 '''
-@app.callback(
+@callback(
     Output("map_graph", "figure"),
     [Input("map_selector", "value"),
      Input("cytoscape", "tapNodeData"), 
@@ -107,12 +107,12 @@ def update_map(which, net_data, map_data):
     trigger = ctx.triggered_id #which of the inputs triggered the callback
 
     if which == "death":
-        df = death_circles.copy() #copies the map data
+        df = death_circles #copies the map data
         lat_c = 'Deathlatitude'
         lon_c = 'Deathlongitude'
         hover_c = 'Deathplace'
     else:
-        df = birth_circles.copy()
+        df = birth_circles
         lat_c = 'Birthlatitude'
         lon_c = 'Birthlongitude'
         hover_c = 'Birthplace'
